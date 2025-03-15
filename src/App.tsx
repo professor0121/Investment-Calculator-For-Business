@@ -62,10 +62,67 @@ const formatPercent = (value: number) =>
     maximumFractionDigits: 2,
   }).format(value) + '%';
 
+// interface CalculatorInputProps {
+//   label: string;
+//   value: string;
+//   onChange: (value: string) => void;
+//   prefix?: string;
+//   suffix?: string;
+//   info?: string;
+//   disabled?: boolean;
+// }
+
+// const CalculatorInput: React.FC<CalculatorInputProps> = ({
+//   label,
+//   value,
+//   onChange,
+//   disabled,
+//   prefix,
+//   suffix,
+//   info,
+// }) => (
+//   <div className="mb-4">
+//     <label className="flex items-center text-sm font-medium text-gray-700 mb-1">
+//       {label}
+//       {info && (
+//         <div className="group relative ml-2">
+//           <Info className="w-4 h-4 text-gray-400" />
+//           <div className="invisible group-hover:visible absolute z-10 w-64 px-4 py-2 text-sm text-gray-600 bg-white border rounded-lg shadow-lg -top-2 left-6">
+//             {info}
+//           </div>
+//         </div>
+//       )}
+//     </label>
+//     <div className="relative rounded-md shadow-sm">
+//       {prefix && (
+//         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+//           <span className="text-gray-500 sm:text-sm">{prefix}</span>
+//         </div>
+//       )}
+//       <input
+//         type="text"
+//         value={value}
+//         disabled={disabled}
+//         onChange={(e) => onChange(e.target.value)}
+//         className={`block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${disabled ? 'bg-gray-50' : ''} ${prefix ? 'pl-7' : 'pl-3'
+//           } ${suffix ? 'pr-12' : 'pr-3'}`}
+//       />
+//       {suffix && (
+//         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+//           <span className="text-gray-500 sm:text-sm">{suffix}</span>
+//         </div>
+//       )}
+//     </div>
+//   </div>
+// );
+
+
+
 interface CalculatorInputProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
   prefix?: string;
   suffix?: string;
   info?: string;
@@ -76,6 +133,7 @@ const CalculatorInput: React.FC<CalculatorInputProps> = ({
   label,
   value,
   onChange,
+  onBlur,
   disabled,
   prefix,
   suffix,
@@ -104,8 +162,9 @@ const CalculatorInput: React.FC<CalculatorInputProps> = ({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className={`block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${disabled ? 'bg-gray-50' : ''} ${prefix ? 'pl-7' : 'pl-3'
-          } ${suffix ? 'pr-12' : 'pr-3'}`}
+        onBlur={onBlur}
+        className={`block w-full rounded-md border-gray-300 focus:border-blue-500 focus:ring-blue-500 sm:text-sm ${disabled ? 'bg-gray-50' : ''
+          } ${prefix ? 'pl-7' : 'pl-3'} ${suffix ? 'pr-12' : 'pr-3'}`}
       />
       {suffix && (
         <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
@@ -116,12 +175,15 @@ const CalculatorInput: React.FC<CalculatorInputProps> = ({
   </div>
 );
 
+
 const ResultCard: React.FC<{ label: string; value: string | React.ReactNode }> = ({ label, value }) => (
   <div className="bg-white p-4 rounded-lg shadow">
     <h3 className="text-sm font-medium text-gray-500">{label}</h3>
     <div className="mt-1 text-xl font-semibold text-gray-900">{value}</div>
   </div>
 );
+
+
 
 function App() {
   const [propertyPrice, setPropertyPrice] = React.useState('730000');
@@ -162,6 +224,10 @@ function App() {
   const [propertyManagementRate, setPropertyManagementRate] = React.useState(2.2);
   const [mounthlyExpence, setMounthlyExpence] = React.useState(272);
   const [preview, setPreview] = React.useState<string | null>(null);
+  const [mortgageAmount, setMortgageAmount] = React.useState(
+    String(Number(propertyPrice) - Number(downPaymentAmount))
+  );
+  
 
   interface FileChangeEvent extends React.ChangeEvent<HTMLInputElement> {
     target: HTMLInputElement & { files: FileList };
@@ -175,7 +241,7 @@ function App() {
     }
   };
 
-  
+
 
   const handlePropertyManagementRateChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     // Convert the input value to a number (or handle invalid entries as needed)
@@ -241,14 +307,14 @@ function App() {
   }, [downPaymentAmount, closingCostAmount, repairCost]);
 
   const calculateMortgage = () => {
-    const principal = Number(propertyPrice) - Number(downPaymentAmount);
+    const principal = Number(mortgageAmount) - Number(downPaymentAmount);
     const monthlyRate = Number(interestRate) / 100 / 12;
     const numberOfPayments = Number(loanTerm) * 12;
     const monthlyPayment =
       (principal * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
       (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
     return isNaN(monthlyPayment) ? 0 : monthlyPayment;
-  };
+  };     
 
   const calculateNOI = () => {
     const annualRent = calculateGrossMonthlyIncome() * 12;
@@ -313,7 +379,7 @@ function App() {
 
   const calculateAmortizationSchedule = () => {
     const monthlyPayment = calculateMortgage();
-    const principal = Number(propertyPrice) - Number(downPaymentAmount);
+    const principal = Number(mortgageAmount) - Number(downPaymentAmount);
     const monthlyRate = Number(interestRate) / 100 / 12;
     const years = Number(loanTerm);
 
@@ -491,13 +557,30 @@ function App() {
                       }}
                       suffix="%"
                     />
-                    <CalculatorInput
+                    {/* <CalculatorInput
                       label="Downpayment / Deposit"
                       value={downPaymentAmount}
                       onChange={(value) => {
                         setDownPaymentAmount(value);
                         const amount = Number(value);
                         if (!isNaN(amount)) {
+                          setDownPaymentPercent(String((amount / Number(propertyPrice)) * 100));
+                        }
+                      }}
+                      prefix="$"
+                    /> */}
+                    <CalculatorInput
+                      label="Downpayment / Deposit"
+                      value={downPaymentAmount}
+                      onChange={(value) => {
+                        // Update the downpayment amount immediately
+                        setDownPaymentAmount(value);
+                      }}
+                      onBlur={() => {
+                        // When the user leaves the field, calculate the percentage based on the current value
+                        const amount = Number(downPaymentAmount);
+                        if (!isNaN(amount) && Number(propertyPrice) > 0) {
+                          // Use 100 as the multiplier for a proper percentage
                           setDownPaymentPercent(String((amount / Number(propertyPrice)) * 100));
                         }
                       }}
@@ -547,12 +630,13 @@ function App() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <CalculatorInput
                       label="Mortgage Amount"
-                      value={String(Number(propertyPrice) - Number(downPaymentAmount))}
-                      onChange={() => { }}
+                      value={mortgageAmount}
+                      onChange={(value) => setMortgageAmount(value)}
                       prefix="$"
-                      disabled
+                      // Remove the "disabled" attribute so it's editable
                       info="Total loan amount (Purchase Price - Down Payment)"
                     />
+
                     <CalculatorInput
                       label="Interest Rate"
                       value={interestRate}
@@ -567,8 +651,17 @@ function App() {
                       suffix="years"
                       info="Length of the mortgage in years"
                     />
+                    {/* <CalculatorInput
+                      label="Monthly Mortgage Payment"
+                      value={String(calculateMortgage().toFixed(2))}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                      info="Principal + Interest payment per month"
+                    /> */}
                     <CalculatorInput
                       label="Monthly Mortgage Payment"
+                      // value={String(calculateMortgage().toFixed(2))}
                       value={String(calculateMortgage().toFixed(2))}
                       onChange={() => { }}
                       prefix="$"
@@ -577,7 +670,8 @@ function App() {
                     />
                     <CalculatorInput
                       label="Loan to Value Ratio (LVR)"
-                      value={String(((Number(propertyPrice) - Number(downPaymentAmount)) / Number(propertyPrice) * 100).toFixed(1))}
+                      value={((Number(mortgageAmount) / Number(propertyPrice))*100).toFixed(1)}
+                      // value={String(((Number(propertyPrice) - Number(downPaymentAmount)) / Number(propertyPrice) * 100).toFixed(1))}
                       onChange={() => { }}
                       suffix="%"
                       disabled
@@ -740,72 +834,72 @@ function App() {
                   />
                 </div> */}
                 <div className="space-y-6">
-    <div className="bg-white rounded-xl pl-[20px] pt-[40px] pb-[20px] shadow-lg pl-1 mb-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-6">
-        Monthly Expenses Overview
-      </h2>
+                  <div className="bg-white rounded-xl pl-[20px] pt-[40px] pb-[20px] shadow-lg pl-1 mb-6">
+                    <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                      Monthly Expenses Overview
+                    </h2>
 
-      <Pie
-        data={{
-          labels: [
-            'Maintenance',
-            'Taxes / Council Rates',
-            'Utilities',
-            'Water Rates',
-            'Insurance',
-            'Cleaning',
-            'Other',
-            'Property Management'
-          ],
-          datasets: [
-            {
-              data: [
-                monthlyMaintenanceCost,
-                monthlyTaxCost,
-                monthlyUtilitiesCost,
-                monthlyWaterCost,
-                monthlyInsuranceCost,
-                monthlyCleaningCost,
-                monthlyOtherCost,
-                monthlyPropertyMgmtCost
-              ],
-              backgroundColor: [
-                '#FF6384',
-                '#36A2EB',
-                '#FFCE56',
-                '#4BC0C0',
-                '#9966FF',
-                '#FF9F40',
-                '#EA80FC',
-                '#00E676'
-              ]
-            }
-          ]
-        }}
-        options={{
-          plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                usePointStyle: true,
-                padding: 20
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: (context) => {
-                  const value = context.raw as number;
-                  return `${context.label}: ${formatCurrency(value)}`;
-                }
-              }
-            }
-          }
-        }}
-      />
-    </div>
+                    <Pie
+                      data={{
+                        labels: [
+                          'Maintenance',
+                          'Taxes / Council Rates',
+                          'Utilities',
+                          'Water Rates',
+                          'Insurance',
+                          'Cleaning',
+                          'Other',
+                          'Property Management'
+                        ],
+                        datasets: [
+                          {
+                            data: [
+                              monthlyMaintenanceCost,
+                              monthlyTaxCost,
+                              monthlyUtilitiesCost,
+                              monthlyWaterCost,
+                              monthlyInsuranceCost,
+                              monthlyCleaningCost,
+                              monthlyOtherCost,
+                              monthlyPropertyMgmtCost
+                            ],
+                            backgroundColor: [
+                              '#FF6384',
+                              '#36A2EB',
+                              '#FFCE56',
+                              '#4BC0C0',
+                              '#9966FF',
+                              '#FF9F40',
+                              '#EA80FC',
+                              '#00E676'
+                            ]
+                          }
+                        ]
+                      }}
+                      options={{
+                        plugins: {
+                          legend: {
+                            position: 'bottom',
+                            labels: {
+                              usePointStyle: true,
+                              padding: 20
+                            }
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `${context.label}: ${formatCurrency(value)}`;
+                              }
+                            }
+                          }
+                        }
+                      }}
+                    />
+                  </div>
 
-    {/* ...rest of your code: the Bar chart, file upload, etc... */}
-  </div>
+                  {/* ...rest of your code: the Bar chart, file upload, etc... */}
+                </div>
 
                 {/* <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Yearly Income vs Expenses</h2>
@@ -1205,7 +1299,7 @@ function App() {
                       <tbody>
                         <tr>
                           <td className="px-4 py-2 border border-gray-200">Mortgage</td>
-                          <td className="px-4 py-2 text-right border border-gray-200">{formatCurrency(Number(propertyPrice) - Number(downPaymentAmount))}</td>
+                          <td className="px-4 py-2 text-right border border-gray-200">{formatCurrency(Number(mortgageAmount))}</td>
                         </tr>
                         <tr>
                           <td className="px-4 py-2 border border-gray-200">Loan Term</td>
@@ -1231,7 +1325,7 @@ function App() {
                       <tbody>
                         <tr>
                           <td className="px-4 py-2 border border-gray-200">Mortgage</td>
-                          <td className="px-4 py-2 text-right border border-gray-200">{formatCurrency(Number(propertyPrice) - Number(downPaymentAmount))}</td>
+                          <td className="px-4 py-2 text-right border border-gray-200">{formatCurrency(Number(mortgageAmount))}</td>
                         </tr>
                         <tr>
                           <td className="px-4 py-2 border border-gray-200">Loan Term</td>
@@ -1268,7 +1362,7 @@ function App() {
                             {(() => {
                               // const numberOfPayments = 360; // 30 years * 12 months
                               const numberOfPayments = 300; // 25 years * 12 months
-                              const loanAmount = Number(propertyPrice) - Number(downPaymentAmount);
+                              const loanAmount = Number(mortgageAmount) - Number(downPaymentAmount);
                               const monthlyRate = Number(interestRate) / 100 / 12;
                               const monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
                                 (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
@@ -1307,7 +1401,7 @@ function App() {
                         <h4 className="text-base font-medium text-gray-700 mb-4">Principal vs Interest Distribution (25 Years)</h4>
                         {(() => {
                           const numberOfPayments = 300; // 25 years * 12 months
-                          const loanAmount = Number(propertyPrice) - Number(downPaymentAmount);
+                          const loanAmount = Number(mortgageAmount) - Number(downPaymentAmount);
                           const monthlyRate = Number(interestRate) / 100 / 12;
                           const monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
                             (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
@@ -1405,7 +1499,7 @@ function App() {
                         <h4 className="text-base font-medium text-gray-700 mb-4">Principal vs Interest Distribution (30 Years)</h4>
                         {(() => {
                           const numberOfPayments = 360; // 30 years * 12 months
-                          const loanAmount = Number(propertyPrice) - Number(downPaymentAmount);
+                          const loanAmount = Number(mortgageAmount) - Number(downPaymentAmount);
                           const monthlyRate = Number(interestRate) / 100 / 12;
                           const monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
                             (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
@@ -1507,7 +1601,7 @@ function App() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Equity at Purchase:</span>
-                      <span className="font-medium">{formatCurrency(Number(downPaymentAmount))}</span>
+                      <span className="font-medium">{formatCurrency(Number(propertyPrice)-Number(mortgageAmount))}</span>
                     </div>
                   </div>
                 </div>
@@ -1529,7 +1623,7 @@ function App() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Loan Amount:</span>
-                      <span className="font-medium">{formatCurrency(Number(propertyPrice) - Number(downPaymentAmount))}</span>
+                      <span className="font-medium">{formatCurrency(Number(mortgageAmount))}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Monthly Payment:</span>
