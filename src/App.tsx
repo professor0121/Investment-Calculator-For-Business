@@ -175,6 +175,8 @@ function App() {
     }
   };
 
+  
+
   const handlePropertyManagementRateChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     // Convert the input value to a number (or handle invalid entries as needed)
     setPropertyManagementRate((parseFloat(e.target.value) / calculateGrossMonthlyIncome()) * 100);
@@ -210,7 +212,7 @@ function App() {
 
   // for the bar calculation
 
-  
+
 
   function handleMounthlyExpence() {
     const total = taxRate + monthlyExpensesMaintenance + utilities + waterRate + insuranceRate + cleaningRate + otherRate + propertyManagementRate;
@@ -406,18 +408,27 @@ function App() {
     });
   };
   // Example: find the larger of the two
-const yearlyIncome = calculateYearlyIncome();
-const yearlyExpenses = handleMounthlyExpence() * 12 + Number(calculateMortgage().toFixed(2)) * 12;
-const rawMax = Math.max(yearlyIncome, yearlyExpenses);
+  const yearlyIncome = calculateYearlyIncome();
+  const yearlyExpenses = handleMounthlyExpence() * 12 + Number(calculateMortgage().toFixed(2)) * 12;
+  const rawMax = Math.max(yearlyIncome, yearlyExpenses);
 
-// OPTIONAL: create a function to round up to the nearest 50k (or any step you want)
-function getNiceMaxValue(value: number) {
-  const roundingFactor = 50000; // round up to the nearest 50k
-  return Math.ceil(value / roundingFactor) * roundingFactor;
-}
+  // OPTIONAL: create a function to round up to the nearest 50k (or any step you want)
+  function getNiceMaxValue(value: number) {
+    const roundingFactor = 50000; // round up to the nearest 50k
+    return Math.ceil(value / roundingFactor) * roundingFactor;
+  }
 
-// Now compute the final max.  Add a bit of headroom if you want:
-const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
+  // Now compute the final max.  Add a bit of headroom if you want:
+  const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
+
+  const monthlyMaintenanceCost = (monthlyExpensesMaintenance * calculateGrossMonthlyIncome()) / 100;
+  const monthlyTaxCost = (taxRate * calculateGrossMonthlyIncome()) / 100;
+  const monthlyUtilitiesCost = (utilities * calculateGrossMonthlyIncome()) / 100;
+  const monthlyWaterCost = (waterRate * calculateGrossMonthlyIncome()) / 100;
+  const monthlyInsuranceCost = (insuranceRate * calculateGrossMonthlyIncome()) / 100;
+  const monthlyCleaningCost = (cleaningRate * calculateGrossMonthlyIncome()) / 100;
+  const monthlyOtherCost = (otherRate * calculateGrossMonthlyIncome()) / 100;
+  const monthlyPropertyMgmtCost = (propertyManagementRate * calculateGrossMonthlyIncome()) / 100;
 
 
   return (
@@ -456,279 +467,347 @@ const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
         </div>
 
         {activeTab === 0 && (
-          <div> 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Property Purchase Information</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <CalculatorInput
-                    label="Purchase Price of Property"
-                    value={propertyPrice}
-                    onChange={setPropertyPrice}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Downpayment / Deposit %"
-                    value={downPaymentPercent}
-                    onChange={(value) => {
-                      setDownPaymentPercent(value);
-                      const percent = Number(value);
-                      if (!isNaN(percent)) {
-                        setDownPaymentAmount(String((Number(propertyPrice) * percent) / 100));
-                      }
-                    }}
-                    suffix="%"
-                  />
-                  <CalculatorInput
-                    label="Downpayment / Deposit"
-                    value={downPaymentAmount}
-                    onChange={(value) => {
-                      setDownPaymentAmount(value);
-                      const amount = Number(value);
-                      if (!isNaN(amount)) {
-                        setDownPaymentPercent(String((amount / Number(propertyPrice)) * 100));
-                      }
-                    }}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Closing Costs %"
-                    value={closingCostPercent}
-                    onChange={(value) => {
-                      setClosingCostPercent(value);
-                      const percent = Number(value);
-                      if (!isNaN(percent)) {
-                        setClosingCostAmount(String((Number(propertyPrice) * percent) / 100));
-                      }
-                    }}
-                    suffix="%"
-                  />
-                  <CalculatorInput
-                    label="Closing Costs"
-                    value={closingCostAmount}
-                    onChange={(value) => {
-                      setClosingCostAmount(value);
-                      const amount = Number(value);
-                      if (!isNaN(amount)) {
-                        setClosingCostPercent(String((amount / Number(propertyPrice)) * 100));
-                      }
-                    }}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Estimated cost of Repairs"
-                    value={repairCost}
-                    onChange={setRepairCost}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Total Capital Required"
-                    value={totalCapitalRequired}
-                    onChange={() => { }}
-                    prefix="$"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Loan Structure</h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <CalculatorInput
-                    label="Mortgage Amount"
-                    value={String(Number(propertyPrice) - Number(downPaymentAmount))}
-                    onChange={() => { }}
-                    prefix="$"
-                    disabled
-                    info="Total loan amount (Purchase Price - Down Payment)"
-                  />
-                  <CalculatorInput
-                    label="Interest Rate"
-                    value={interestRate}
-                    onChange={setInterestRate}
-                    suffix="%"
-                    info="Annual interest rate for the mortgage"
-                  />
-                  <CalculatorInput
-                    label="Loan Term"
-                    value={loanTerm}
-                    onChange={setLoanTerm}
-                    suffix="years"
-                    info="Length of the mortgage in years"
-                  />
-                  <CalculatorInput
-                    label="Monthly Mortgage Payment"
-                    value={String(calculateMortgage().toFixed(2))}
-                    onChange={() => { }}
-                    prefix="$"
-                    disabled
-                    info="Principal + Interest payment per month"
-                  />
-                  <CalculatorInput
-                    label="Loan to Value Ratio (LVR)"
-                    value={String(((Number(propertyPrice) - Number(downPaymentAmount)) / Number(propertyPrice) * 100).toFixed(1))}
-                    onChange={() => { }}
-                    suffix="%"
-                    disabled
-                    info="Loan amount as a percentage of property value"
-                  />
-                </div>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Income</h2>
-                <h3 className="text-lg font-medium text-gray-700 mb-4">Monthly Rental from Property</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <CalculatorInput
-                    label="Property/Unit #1"
-                    value={propertyUnit1}
-                    onChange={setPropertyUnit1}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #2"
-                    value={propertyUnit2}
-                    onChange={setPropertyUnit2}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #3"
-                    value={propertyUnit3}
-                    onChange={setPropertyUnit3}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #4"
-                    value={propertyUnit4}
-                    onChange={setPropertyUnit4}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #5"
-                    value={propertyUnit5}
-                    onChange={setPropertyUnit5}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #6"
-                    value={propertyUnit6}
-                    onChange={setPropertyUnit6}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #7"
-                    value={propertyUnit7}
-                    onChange={setPropertyUnit7}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #8"
-                    value={propertyUnit8}
-                    onChange={setPropertyUnit8}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #9"
-                    value={propertyUnit9}
-                    onChange={setPropertyUnit9}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Property/Unit #10"
-                    value={propertyUnit10}
-                    onChange={setPropertyUnit10}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="Total Rent per month"
-                    value={String(calculateTotalMonthlyRent())}
-                    onChange={() => { }}
-                    prefix="$"
-                    disabled
-                  />
-                  <CalculatorInput
-                    label="Other Income from Property"
-                    value={otherIncome}
-                    onChange={setOtherIncome}
-                    prefix="$"
-                  />
-                  <CalculatorInput
-                    label="GROSS Monthly Income"
-                    value={String(calculateGrossMonthlyIncome())}
-                    onChange={() => { }}
-                    prefix="$"
-                    disabled
-                  />
-                  <CalculatorInput
-                    label="YEARLY Income"
-                    value={String(calculateYearlyIncome())}
-                    onChange={() => { }}
-                    prefix="$"
-                    disabled
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-6">
-              <div className="bg-white rounded-xl pl-[20px] pt-[40px] pb-[20px] shadow-lg pl-1 mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Monthly Expenses Overview</h2>
-                <Pie
-                  data={{
-                    labels: [
-                      'Maintenance',
-                      'Taxes / Council Rates',
-                      'Utilities',
-                      'Water Rates',
-                      'Insurance',
-                      'Cleaning',
-                      'Other',
-                      'Property Management'
-                    ],
-                    datasets: [{
-                      data: [
-                        (Number(monthlyRent) * Number(maintenance)) / 100,
-                        Number(propertyTax) / 12,
-                        0, // Utilities
-                        42, // Water Rates
-                        Number(insurance) / 12,
-                        0, // Cleaning
-                        0, // Other
-                        (Number(monthlyRent) * Number(propertyManagement)) / 100
-                      ],
-                      backgroundColor: [
-                        '#FF6384',
-                        '#36A2EB',
-                        '#FFCE56',
-                        '#4BC0C0',
-                        '#9966FF',
-                        '#FF9F40',
-                        '#EA80FC',
-                        '#00E676'
-                      ]
-                    }]
-                  }}
-                  options={{
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          usePointStyle: true,
-                          padding: 20
+          <div>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Property Purchase Information</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CalculatorInput
+                      label="Purchase Price of Property"
+                      value={propertyPrice}
+                      onChange={setPropertyPrice}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Downpayment / Deposit %"
+                      value={downPaymentPercent}
+                      onChange={(value) => {
+                        setDownPaymentPercent(value);
+                        const percent = Number(value);
+                        if (!isNaN(percent)) {
+                          setDownPaymentAmount(String((Number(propertyPrice) * percent) / 100));
                         }
-                      },
-                      tooltip: {
-                        callbacks: {
-                          label: (context) => {
-                            const value = context.raw as number;
-                            return `${context.label}: ${formatCurrency(value)}`;
+                      }}
+                      suffix="%"
+                    />
+                    <CalculatorInput
+                      label="Downpayment / Deposit"
+                      value={downPaymentAmount}
+                      onChange={(value) => {
+                        setDownPaymentAmount(value);
+                        const amount = Number(value);
+                        if (!isNaN(amount)) {
+                          setDownPaymentPercent(String((amount / Number(propertyPrice)) * 100));
+                        }
+                      }}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Closing Costs %"
+                      value={closingCostPercent}
+                      onChange={(value) => {
+                        setClosingCostPercent(value);
+                        const percent = Number(value);
+                        if (!isNaN(percent)) {
+                          setClosingCostAmount(String((Number(propertyPrice) * percent) / 100));
+                        }
+                      }}
+                      suffix="%"
+                    />
+                    <CalculatorInput
+                      label="Closing Costs"
+                      value={closingCostAmount}
+                      onChange={(value) => {
+                        setClosingCostAmount(value);
+                        const amount = Number(value);
+                        if (!isNaN(amount)) {
+                          setClosingCostPercent(String((amount / Number(propertyPrice)) * 100));
+                        }
+                      }}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Estimated cost of Repairs"
+                      value={repairCost}
+                      onChange={setRepairCost}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Total Capital Required"
+                      value={totalCapitalRequired}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                    />
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Loan Structure</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <CalculatorInput
+                      label="Mortgage Amount"
+                      value={String(Number(propertyPrice) - Number(downPaymentAmount))}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                      info="Total loan amount (Purchase Price - Down Payment)"
+                    />
+                    <CalculatorInput
+                      label="Interest Rate"
+                      value={interestRate}
+                      onChange={setInterestRate}
+                      suffix="%"
+                      info="Annual interest rate for the mortgage"
+                    />
+                    <CalculatorInput
+                      label="Loan Term"
+                      value={loanTerm}
+                      onChange={setLoanTerm}
+                      suffix="years"
+                      info="Length of the mortgage in years"
+                    />
+                    <CalculatorInput
+                      label="Monthly Mortgage Payment"
+                      value={String(calculateMortgage().toFixed(2))}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                      info="Principal + Interest payment per month"
+                    />
+                    <CalculatorInput
+                      label="Loan to Value Ratio (LVR)"
+                      value={String(((Number(propertyPrice) - Number(downPaymentAmount)) / Number(propertyPrice) * 100).toFixed(1))}
+                      onChange={() => { }}
+                      suffix="%"
+                      disabled
+                      info="Loan amount as a percentage of property value"
+                    />
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Income</h2>
+                  <h3 className="text-lg font-medium text-gray-700 mb-4">Monthly Rental from Property</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <CalculatorInput
+                      label="Property/Unit #1"
+                      value={propertyUnit1}
+                      onChange={setPropertyUnit1}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #2"
+                      value={propertyUnit2}
+                      onChange={setPropertyUnit2}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #3"
+                      value={propertyUnit3}
+                      onChange={setPropertyUnit3}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #4"
+                      value={propertyUnit4}
+                      onChange={setPropertyUnit4}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #5"
+                      value={propertyUnit5}
+                      onChange={setPropertyUnit5}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #6"
+                      value={propertyUnit6}
+                      onChange={setPropertyUnit6}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #7"
+                      value={propertyUnit7}
+                      onChange={setPropertyUnit7}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #8"
+                      value={propertyUnit8}
+                      onChange={setPropertyUnit8}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #9"
+                      value={propertyUnit9}
+                      onChange={setPropertyUnit9}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Property/Unit #10"
+                      value={propertyUnit10}
+                      onChange={setPropertyUnit10}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="Total Rent per month"
+                      value={String(calculateTotalMonthlyRent())}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                    />
+                    <CalculatorInput
+                      label="Other Income from Property"
+                      value={otherIncome}
+                      onChange={setOtherIncome}
+                      prefix="$"
+                    />
+                    <CalculatorInput
+                      label="GROSS Monthly Income"
+                      value={String(calculateGrossMonthlyIncome())}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                    />
+                    <CalculatorInput
+                      label="YEARLY Income"
+                      value={String(calculateYearlyIncome())}
+                      onChange={() => { }}
+                      prefix="$"
+                      disabled
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* <div className="bg-white rounded-xl pl-[20px] pt-[40px] pb-[20px] shadow-lg pl-1 mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Monthly Expenses Overview</h2>
+                  <Pie
+                    data={{
+                      labels: [
+                        'Maintenance',
+                        'Taxes / Council Rates',
+                        'Utilities',
+                        'Water Rates',
+                        'Insurance',
+                        'Cleaning',
+                        'Other',
+                        'Property Management'
+                      ],
+                      datasets: [{
+                        data: [
+                          (Number(monthlyRent) * Number(maintenance)) / 100,
+                          Number(propertyTax) / 12,
+                          0, // Utilities
+                          42, // Water Rates
+                          Number(insurance) / 12,
+                          0, // Cleaning
+                          0, // Other
+                          (Number(monthlyRent) * Number(propertyManagement)) / 100
+                        ],
+                        backgroundColor: [
+                          '#FF6384',
+                          '#36A2EB',
+                          '#FFCE56',
+                          '#4BC0C0',
+                          '#9966FF',
+                          '#FF9F40',
+                          '#EA80FC',
+                          '#00E676'
+                        ]
+                      }]
+                    }}
+                    options={{
+                      plugins: {
+                        legend: {
+                          position: 'bottom',
+                          labels: {
+                            usePointStyle: true,
+                            padding: 20
+                          }
+                        },
+                        tooltip: {
+                          callbacks: {
+                            label: (context) => {
+                              const value = context.raw as number;
+                              return `${context.label}: ${formatCurrency(value)}`;
+                            }
                           }
                         }
                       }
-                    }
-                  }}
-                />
-              </div>
-              {/* <div className="bg-white rounded-xl shadow-lg p-6">
+                    }}
+                  />
+                </div> */}
+                <div className="space-y-6">
+    <div className="bg-white rounded-xl pl-[20px] pt-[40px] pb-[20px] shadow-lg pl-1 mb-6">
+      <h2 className="text-xl font-semibold text-gray-900 mb-6">
+        Monthly Expenses Overview
+      </h2>
+
+      <Pie
+        data={{
+          labels: [
+            'Maintenance',
+            'Taxes / Council Rates',
+            'Utilities',
+            'Water Rates',
+            'Insurance',
+            'Cleaning',
+            'Other',
+            'Property Management'
+          ],
+          datasets: [
+            {
+              data: [
+                monthlyMaintenanceCost,
+                monthlyTaxCost,
+                monthlyUtilitiesCost,
+                monthlyWaterCost,
+                monthlyInsuranceCost,
+                monthlyCleaningCost,
+                monthlyOtherCost,
+                monthlyPropertyMgmtCost
+              ],
+              backgroundColor: [
+                '#FF6384',
+                '#36A2EB',
+                '#FFCE56',
+                '#4BC0C0',
+                '#9966FF',
+                '#FF9F40',
+                '#EA80FC',
+                '#00E676'
+              ]
+            }
+          ]
+        }}
+        options={{
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                usePointStyle: true,
+                padding: 20
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: (context) => {
+                  const value = context.raw as number;
+                  return `${context.label}: ${formatCurrency(value)}`;
+                }
+              }
+            }
+          }
+        }}
+      />
+    </div>
+
+    {/* ...rest of your code: the Bar chart, file upload, etc... */}
+  </div>
+
+                {/* <div className="bg-white rounded-xl shadow-lg p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">Yearly Income vs Expenses</h2>
                 <Bar
                   // height={100} // Set the desired height (in pixels)
@@ -771,64 +850,64 @@ const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
                   }}
                 />
               </div> */}
-              <div className="bg-white rounded-xl shadow-lg p-6">
-  <h2 className="text-xl font-semibold text-gray-900 mb-6">
-    Yearly Income vs Expenses (inc Mortgage)
-  </h2>
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                    Yearly Income vs Expenses (inc Mortgage)
+                  </h2>
 
-  <div className="w-64 h-[500px] mx-auto">
-    <Bar
-      data={{
-        labels: ['Yearly Comparison'],
-        datasets: [
-          {
-            label: 'Income',
-            data: [calculateYearlyIncome()],
-            backgroundColor: '#4ade80',
-          },
-          {
-            label: 'Expenses (inc. Mortgage)',
-            data: [
-              handleMounthlyExpence() * 12 +
-                Number(calculateMortgage().toFixed(2)) * 12
-            ],
-            backgroundColor: '#facc15',
-          }
-        ]
-      }}
-      options={{
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true,
-            // Dynamic max logic:
-            max: dynamicMax, // see the calculation above
-            ticks: {
-              callback: (value) => formatCurrency(Number(value)),
-            },
-          },
-        },
-        plugins: {
-          legend: {
-            position: 'bottom',
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const value = context.raw as number;
-                return `${context.dataset.label}: ${formatCurrency(value)}`;
-              },
-            },
-          },
-        },
-      }}
-    />
-  </div>
-</div>
+                  <div className="w-64 h-[500px] mx-auto">
+                    <Bar
+                      data={{
+                        labels: ['Yearly Comparison'],
+                        datasets: [
+                          {
+                            label: 'Income',
+                            data: [calculateYearlyIncome()],
+                            backgroundColor: '#4ade80',
+                          },
+                          {
+                            label: 'Expenses (inc. Mortgage)',
+                            data: [
+                              handleMounthlyExpence() * 12 +
+                              Number(calculateMortgage().toFixed(2)) * 12
+                            ],
+                            backgroundColor: '#facc15',
+                          }
+                        ]
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                          y: {
+                            beginAtZero: true,
+                            // Dynamic max logic:
+                            max: dynamicMax, // see the calculation above
+                            ticks: {
+                              callback: (value) => formatCurrency(Number(value)),
+                            },
+                          },
+                        },
+                        plugins: {
+                          legend: {
+                            position: 'bottom',
+                          },
+                          tooltip: {
+                            callbacks: {
+                              label: (context) => {
+                                const value = context.raw as number;
+                                return `${context.dataset.label}: ${formatCurrency(value)}`;
+                              },
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
 
 
-              {/* <div className="bg-white rounded-xl shadow-lg p-6 flex justify-center items-center">
+                {/* <div className="bg-white rounded-xl shadow-lg p-6 flex justify-center items-center">
                 <label className="flex flex-col items-center px-6 py-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
                   <svg
                     className="w-12 h-12 text-gray-400"
@@ -850,101 +929,101 @@ const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
                 </label>
               </div> */}
 
-<>
-      <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-6 justify-center items-center">
-        <h1 className="text-xl font-semibold text-gray-900 mb-6">Insert Property Image Here </h1>
-        <label className="flex flex-col items-center px-6 py-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
-          <svg
-            className="w-12 h-12 text-gray-400"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 48 48"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M28 8H12a4 4 0 00-4 4v24a4 4 0 004 4h24a4 4 0 004-4V20L28 8z"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            ></path>
-            <path
-              d="M28 8v8h8"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            ></path>
-          </svg>
-          <span className="mt-2 text-base text-gray-600">Select a file</span>
-          <input type="file" onChange={handleFileChange} className="hidden" />
-        </label>
-      </div>
+                <>
+                  <div className="bg-white rounded-xl shadow-lg p-6 flex flex-col gap-6 justify-center items-center">
+                    <h1 className="text-xl font-semibold text-gray-900 mb-6">Insert Property Image Here </h1>
+                    <label className="flex flex-col items-center px-6 py-8 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:bg-gray-100">
+                      <svg
+                        className="w-12 h-12 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 48 48"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M28 8H12a4 4 0 00-4 4v24a4 4 0 004 4h24a4 4 0 004-4V20L28 8z"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        ></path>
+                        <path
+                          d="M28 8v8h8"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        ></path>
+                      </svg>
+                      <span className="mt-2 text-base text-gray-600">Select a file</span>
+                      <input type="file" onChange={handleFileChange} className="hidden" />
+                    </label>
+                  </div>
 
-      {/* Image preview */}
-      {preview && (
-        <div className="mt-4 flex justify-center">
-          <img
-            src={preview}
-            alt="Selected Preview"
-            className="max-w-full h-auto rounded-lg shadow-md"
-          />
-        </div>
-      )}
-    </>
-
-            </div>
-
-            <div className="lg:sticky lg:top-8">
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-6">Key Metrics</h2>
-                <div className="space-y-4">
-                  <ResultCard
-                    label="Meet the 50% Rule?"
-                    value={checkFiftyPercentRule() ? '✅ Yes' : '❌ No'}
-                  />
-                  <ResultCard
-                    label="Meet the 1% Rule?"
-                    value={checkOnePercentRule() ? '✅ Passes' : '❌ Does not pass'}
-                  />
-                  <h3 className="text-lg font-medium text-gray-700 mt-6 mb-4">Summary</h3>
-                  <ResultCard
-                    label="Monthly Net Operating Income (NOI)"
-                    // value={formatCurrency((calculateGrossMonthlyIncome() * 12 - 
-                    //   ((calculateGrossMonthlyIncome() * 12 * Number(maintenance)) / 100) -
-                    //   ((calculateGrossMonthlyIncome() * 12 * Number(propertyManagement)) / 100) -
-                    //   Number(propertyTax) - Number(insurance)) / 12)}
-                    value={
-                      calculateGrossMonthlyIncome() - handleMounthlyExpence()
-                    }
-                  />
-                  <ResultCard
-                    label="Yearly NOI"
-                    // value={formatCurrency(calculateGrossMonthlyIncome() * 12 - 
-                    //   ((calculateGrossMonthlyIncome() * 12 * Number(maintenance)) / 100) -
-                    //   ((calculateGrossMonthlyIncome() * 12 * Number(propertyManagement)) / 100) -
-                    //   Number(propertyTax) - Number(insurance))}
-                    value={
-                      calculateYearlyIncome() - (handleMounthlyExpence() * 12 + (Number(calculateMortgage().toFixed(2)) * 12))
-                    }
-                  />
-                  <ResultCard
-                    label="Cap Rate / GROSS Rental Yield"
-                    // value={formatPercent(calculateCapRate())}
-                    value={
-                      (((calculateYearlyIncome() / Number(propertyPrice)) * 100).toFixed(2)) + '%'
-                    }
-                  />
-                  <ResultCard
-                    label="Cash on Cash Return (Yr 1)"
-                    value={
-                      <input
-                        type="text"
-                        value={cashOnCashReturn}
-                        onChange={(e) => setCashOnCashReturn(e.target.value)}
-                        className="w-full bg-transparent text-xl font-semibold text-gray-900 focus:outline-none"
+                  {/* Image preview */}
+                  {preview && (
+                    <div className="mt-4 flex justify-center">
+                      <img
+                        src={preview}
+                        alt="Selected Preview"
+                        className="max-w-full h-auto rounded-lg shadow-md"
                       />
-                    }
-                  />
-                  {/* <ResultCard
+                    </div>
+                  )}
+                </>
+
+              </div>
+
+              <div className="lg:sticky lg:top-8">
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6">Key Metrics</h2>
+                  <div className="space-y-4">
+                    <ResultCard
+                      label="Meet the 50% Rule?"
+                      value={checkFiftyPercentRule() ? '✅ Yes' : '❌ No'}
+                    />
+                    <ResultCard
+                      label="Meet the 1% Rule?"
+                      value={checkOnePercentRule() ? '✅ Passes' : '❌ Does not pass'}
+                    />
+                    <h3 className="text-lg font-medium text-gray-700 mt-6 mb-4">Summary</h3>
+                    <ResultCard
+                      label="Monthly Net Operating Income (NOI)"
+                      // value={formatCurrency((calculateGrossMonthlyIncome() * 12 - 
+                      //   ((calculateGrossMonthlyIncome() * 12 * Number(maintenance)) / 100) -
+                      //   ((calculateGrossMonthlyIncome() * 12 * Number(propertyManagement)) / 100) -
+                      //   Number(propertyTax) - Number(insurance)) / 12)}
+                      value={
+                        calculateGrossMonthlyIncome() - handleMounthlyExpence()
+                      }
+                    />
+                    <ResultCard
+                      label="Yearly NOI"
+                      // value={formatCurrency(calculateGrossMonthlyIncome() * 12 - 
+                      //   ((calculateGrossMonthlyIncome() * 12 * Number(maintenance)) / 100) -
+                      //   ((calculateGrossMonthlyIncome() * 12 * Number(propertyManagement)) / 100) -
+                      //   Number(propertyTax) - Number(insurance))}
+                      value={
+                        calculateYearlyIncome() - (handleMounthlyExpence() * 12 + (Number(calculateMortgage().toFixed(2)) * 12))
+                      }
+                    />
+                    <ResultCard
+                      label="Cap Rate / GROSS Rental Yield"
+                      // value={formatPercent(calculateCapRate())}
+                      value={
+                        (((calculateYearlyIncome() / Number(propertyPrice)) * 100).toFixed(2)) + '%'
+                      }
+                    />
+                    <ResultCard
+                      label="Cash on Cash Return (Yr 1)"
+                      value={
+                        <input
+                          type="text"
+                          value={cashOnCashReturn}
+                          onChange={(e) => setCashOnCashReturn(e.target.value)}
+                          className="w-full bg-transparent text-xl font-semibold text-gray-900 focus:outline-none"
+                        />
+                      }
+                    />
+                    {/* <ResultCard
                     label="Downpayment / Deposit"
                     value={formatCurrency(Number(downPaymentAmount))}
                   />
@@ -976,73 +1055,73 @@ const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
                     label="Cash on Cash Return"
                     value={formatPercent(calculateCashOnCashReturn())}
                   /> */}
-                  <ResultCard
-                    label=""
-                    value={<div className="text-lg font-medium text-gray-700">Cash Flow Analysis</div>}
-                  />
-                  <ResultCard
-                    label="TOTAL Cashflow per month"
-                    value={(calculateGrossMonthlyIncome() - (calculateMortgage() + handleMounthlyExpence())).toFixed(2)}
-                  />
-                  <ResultCard
-                    label="TOTAL Cashflow per year"
-                    value={calculateYearlyIncome() - (handleMounthlyExpence() * 12 + (Number(calculateMortgage().toFixed(2)) * 12))}
-                  />
-                  <div className="mt-6">
-                    <h3 className="text-lg font-medium text-gray-700 mb-4">Monthly Expenses</h3>
-                    <div className="grid grid-cols-3 gap-2 text-sm">
-                      <div className="font-medium text-gray-600">Item</div>
-                      <div className="text-right font-medium text-gray-600">Percentage</div>
-                      <div className="text-right font-medium text-gray-600">Amount</div>
+                    <ResultCard
+                      label=""
+                      value={<div className="text-lg font-medium text-gray-700">Cash Flow Analysis</div>}
+                    />
+                    <ResultCard
+                      label="TOTAL Cashflow per month"
+                      value={(calculateGrossMonthlyIncome() - (calculateMortgage() + handleMounthlyExpence())).toFixed(2)}
+                    />
+                    <ResultCard
+                      label="TOTAL Cashflow per year"
+                      value={calculateYearlyIncome() - (handleMounthlyExpence() * 12 + (Number(calculateMortgage().toFixed(2)) * 12))}
+                    />
+                    <div className="mt-6">
+                      <h3 className="text-lg font-medium text-gray-700 mb-4">Monthly Expenses</h3>
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div className="font-medium text-gray-600">Item</div>
+                        <div className="text-right font-medium text-gray-600">Percentage</div>
+                        <div className="text-right font-medium text-gray-600">Amount</div>
 
-                      <div>Maintenance</div>
-                      <div className="text-right">{monthlyExpensesMaintenance}%</div>
-                      <input type="number" defaultValue={0} className="text-right" onChange={handleMaintenanceChange} />
+                        <div>Maintenance</div>
+                        <div className="text-right">{monthlyExpensesMaintenance}%</div>
+                        <input type="number" defaultValue={0} className="text-right" onChange={handleMaintenanceChange} />
 
-                      <div>Taxes / Council Rates</div>
-                      <div className="text-right">{taxRate}%</div>
-                      <input type="number" defaultValue={65} className="text-right" onChange={handleTaxChange} />
+                        <div>Taxes / Council Rates</div>
+                        <div className="text-right">{taxRate}%</div>
+                        <input type="number" defaultValue={65} className="text-right" onChange={handleTaxChange} />
 
-                      <div>Utilities</div>
-                      <div className="text-right">{utilities}%</div>
-                      <input type="number" defaultValue={0} className="text-right" onChange={handleUtilitiesChange} />
+                        <div>Utilities</div>
+                        <div className="text-right">{utilities}%</div>
+                        <input type="number" defaultValue={0} className="text-right" onChange={handleUtilitiesChange} />
 
-                      <div>Water Rates</div>
-                      <div className="text-right">{waterRate}%</div>
-                      <input type="number" defaultValue={42} className="text-right" onChange={handlewaterRateChange} />
+                        <div>Water Rates</div>
+                        <div className="text-right">{waterRate}%</div>
+                        <input type="number" defaultValue={42} className="text-right" onChange={handlewaterRateChange} />
 
-                      <div>Insurance</div>
-                      <div className="text-right">{insuranceRate}%</div>
-                      <input type="number" defaultValue={100} className="text-right" onChange={handleinsuranceRateChange} />
+                        <div>Insurance</div>
+                        <div className="text-right">{insuranceRate}%</div>
+                        <input type="number" defaultValue={100} className="text-right" onChange={handleinsuranceRateChange} />
 
-                      <div>Cleaning</div>
-                      <div className="text-right">{cleaningRate}%</div>
-                      <input type="number" defaultValue={0} className="text-right" onChange={handlecleaningRateChange} />
+                        <div>Cleaning</div>
+                        <div className="text-right">{cleaningRate}%</div>
+                        <input type="number" defaultValue={0} className="text-right" onChange={handlecleaningRateChange} />
 
-                      <div>Other</div>
-                      <div className="text-right">{otherRate}%</div>
-                      <input type="number" defaultValue={0} className="text-right" onChange={handleotherRateChange} />
+                        <div>Other</div>
+                        <div className="text-right">{otherRate}%</div>
+                        <input type="number" defaultValue={0} className="text-right" onChange={handleotherRateChange} />
 
-                      <div>Property Management</div>
-                      <div className="text-right">{propertyManagementRate}%</div>
-                      <input type="number" defaultValue={65} className="text-right" onChange={handlePropertyManagementRateChange} />
+                        <div>Property Management</div>
+                        <div className="text-right">{propertyManagementRate}%</div>
+                        <input type="number" defaultValue={65} className="text-right" onChange={handlePropertyManagementRateChange} />
 
 
-                      <div className="border-t pt-2 font-medium">Expenses % of Income</div>
-                      <div className="border-t pt-2 text-right font-medium">{(((handleMounthlyExpence() * 12) / calculateYearlyIncome()) * 100)}</div>
-                      <div className="border-t pt-2 text-right font-medium">{ }</div>
+                        <div className="border-t pt-2 font-medium">Expenses % of Income</div>
+                        <div className="border-t pt-2 text-right font-medium">{(((handleMounthlyExpence() * 12) / calculateYearlyIncome()) * 100)}</div>
+                        <div className="border-t pt-2 text-right font-medium">{ }</div>
 
-                      <div>Monthly Expenses</div>
-                      <div className="text-right"></div>
-                      <div className="text-right">{handleMounthlyExpence()}</div>
+                        <div>Monthly Expenses</div>
+                        <div className="text-right"></div>
+                        <div className="text-right">{handleMounthlyExpence()}</div>
 
-                      <div>Yearly Expenses</div>
-                      <div className="text-right"></div>
-                      <div className="text-right">{handleMounthlyExpence() * 12}</div>
+                        <div>Yearly Expenses</div>
+                        <div className="text-right"></div>
+                        <div className="text-right">{handleMounthlyExpence() * 12}</div>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* <div className="mt-6 space-y-4">
+                    {/* <div className="mt-6 space-y-4">
                     <ResultCard
                       label="MONTHLY Expenses Excluding Mortgage"
                       value={handleMounthlyExpence()}
@@ -1069,33 +1148,33 @@ const dynamicMax = getNiceMaxValue(rawMax * 1.1); // 10% buffer
                       (Number(monthlyRent) * Number(propertyManagement)) / 100
                     )}
                   /> */}
-                </div>
-                
-              </div>
-              
-            </div>
-            
-          </div>
-          <div className="mt-6 flex justify-between ">
-                    <ResultCard
-                      label="MONTHLY Expenses Excluding Mortgage"
-                      value={handleMounthlyExpence()}
-                    
-                    />
-                    <ResultCard
-                      label="YEARLY Expenses Excluding Mortgage"
-                      value={handleMounthlyExpence() * 12}
-                    />
-                    <ResultCard
-                      label="MONTHLY Expenses Inc Mortgage"
-                      value={(calculateMortgage() + handleMounthlyExpence()).toFixed(2)}
-                    />
-                    <ResultCard
-                      label="YEARLY Expenses Inc Mortgage"
-                      value={handleMounthlyExpence() * 12 + (Number(calculateMortgage().toFixed(2)) * 12)}
-                    />
                   </div>
-                  {/* <ResultCard
+
+                </div>
+
+              </div>
+
+            </div>
+            <div className="mt-6 flex justify-between bg-white px-6 py-6 rounded-xl ">
+              <ResultCard
+                label="MONTHLY Expenses Excluding Mortgage"
+                value={handleMounthlyExpence()}
+
+              />
+              <ResultCard
+                label="YEARLY Expenses Excluding Mortgage"
+                value={handleMounthlyExpence() * 12}
+              />
+              <ResultCard
+                label="MONTHLY Expenses Inc Mortgage"
+                value={(calculateMortgage() + handleMounthlyExpence()).toFixed(2)}
+              />
+              <ResultCard
+                label="YEARLY Expenses Inc Mortgage"
+                value={handleMounthlyExpence() * 12 + (Number(calculateMortgage().toFixed(2)) * 12)}
+              />
+            </div>
+            {/* <ResultCard
                     label="Total Monthly Expenses"
                     value={formatCurrency(
                       Number(propertyTax) / 12 +

@@ -4,6 +4,29 @@
 
 @layer base {
   input {
-    @apply border-gray-300;
+    /* @apply border-red-300; */
+    height: 36px;
   }
 }
+
+input {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e2e8f0; /* light gray border */
+  border-radius: 0.5rem;
+  background-color: #fff;
+  color: #2d3748; /* dark text color */
+  font-size: 1rem;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #3182ce; /* blue border on focus */
+  box-shadow: 0 0 0 0px rgba(66, 153, 225, 0.5);
+}
+
+input::placeholder {
+  color: #a0aec0; /* lighter gray placeholder text */
+} 
