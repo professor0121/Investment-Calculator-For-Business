@@ -227,7 +227,7 @@ function App() {
   const [mortgageAmount, setMortgageAmount] = React.useState(
     String(Number(propertyPrice) - Number(downPaymentAmount))
   );
-  
+
 
   interface FileChangeEvent extends React.ChangeEvent<HTMLInputElement> {
     target: HTMLInputElement & { files: FileList };
@@ -314,7 +314,7 @@ function App() {
       (principal * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
       (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
     return isNaN(monthlyPayment) ? 0 : monthlyPayment;
-  };     
+  };
 
   const calculateNOI = () => {
     const annualRent = calculateGrossMonthlyIncome() * 12;
@@ -457,7 +457,7 @@ function App() {
     };
 
     return Array.from({ length: 30 }, (_, i) => {
-      const year = i + 1;
+      const year = i;
       const propertyValue = price * Math.pow(1 + appreciation, year);
       const remainingLoan = calculateLoanBalance(year);
       const totalEquity = propertyValue - remainingLoan;
@@ -670,7 +670,7 @@ function App() {
                     />
                     <CalculatorInput
                       label="Loan to Value Ratio (LVR)"
-                      value={((Number(mortgageAmount) / Number(propertyPrice))*100).toFixed(1)}
+                      value={((Number(mortgageAmount) / Number(propertyPrice)) * 100).toFixed(1)}
                       // value={String(((Number(propertyPrice) - Number(downPaymentAmount)) / Number(propertyPrice) * 100).toFixed(1))}
                       onChange={() => { }}
                       suffix="%"
@@ -1601,7 +1601,7 @@ function App() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Equity at Purchase:</span>
-                      <span className="font-medium">{formatCurrency(Number(propertyPrice)-Number(mortgageAmount))}</span>
+                      <span className="font-medium">{formatCurrency(Number(propertyPrice) - Number(mortgageAmount))}</span>
                     </div>
                   </div>
                 </div>
@@ -1692,40 +1692,49 @@ function App() {
                     ></textarea>
                   </div>
                 </div>
+                <table className="min-w-full border-collapse">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-gray-700 font-medium border border-gray-200">Year</th>
+                    <th className="px-4 py-2 text-right text-gray-700 font-medium border border-gray-200">Equity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[1, 5, 10, 15, 20, 25, 30].map((year) => {
+                    // Find the equity projection for this year
+                    const eqRow = calculateEquityProjections().find((row) => row.year === year-1);
 
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Equity / Net Worth Summary</h2>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity after 1YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[0].totalEquity)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity 5YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[4].totalEquity)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity 10YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[9].totalEquity)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity 15YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[14].totalEquity)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity 20YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[19].totalEquity)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity 25YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[24].totalEquity)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Equity 30YR:</span>
-                      <span className="font-medium">{formatCurrency(calculateEquityProjections()[29].totalEquity)}</span>
-                    </div>
-                  </div>
-                </div>
+                    // If no projection is found for this year, skip rendering
+                    if (!eqRow) return null;
+
+                    // Get the matching yearly amortization row for the same year
+                    const amortizationRow = calculateAmortizationSchedule().yearlySchedule.find(
+                      (amRow) => amRow.year === year
+                    );
+
+                    // For Year 1, override the property value to the original purchase price
+                    const computedPropertyValue =
+                      year === 1 ? Number(propertyPrice) : eqRow.propertyValue;
+
+                    // Calculate equity: property value - remaining loan balance
+                    const equity =
+                      amortizationRow !== undefined
+                        ? computedPropertyValue - amortizationRow.balance
+                        : 0;
+
+                    return (
+                      <tr key={`eq-${year}`} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border border-gray-200 text-center">
+                          {`Year ${year}`}
+                        </td>
+                        <td className="px-4 py-2 border border-gray-200 text-right">
+                          {amortizationRow ? formatCurrency(equity) : '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
               </div>
 
               {/* Third Column - Graph */}
@@ -1789,38 +1798,55 @@ function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {/* Optionally add a Purchase Date row */}
+                  {/* Purchase Date Row */}
                   <tr className="hover:bg-gray-50">
                     <td className="px-4 py-2 border border-gray-200 text-center">Purchase Date</td>
                     <td className="px-4 py-2 border border-gray-200 text-right">
                       {formatCurrency(Number(propertyPrice))}
                     </td>
                     <td className="px-4 py-2 border border-gray-200 text-right">
-                      {formatCurrency(Number(propertyPrice) - Number(downPaymentAmount))}
+                      {formatCurrency(Number(mortgageAmount) - Number(downPaymentAmount))}
                     </td>
                     <td className="px-4 py-2 border border-gray-200 text-right">
                       {formatCurrency(0)}
                     </td>
                   </tr>
-                  {calculateEquityProjections().map((row) => {
-                    const totalLoan = row.propertyValue - row.totalEquity;
+
+                  {calculateEquityProjections().map((eqRow) => {
+                    // Get the matching yearly amortization row for the same year
+                    const amortizationRow = calculateAmortizationSchedule().yearlySchedule.find(
+                      (amRow) => amRow.year === eqRow.year+1
+                    );
+
+                    // Override property value for Year 1 to be the original purchase price
+                    const computedPropertyValue =
+                      eqRow.year === 1 ? Number(propertyPrice) : eqRow.propertyValue;
+
+                    // Calculate equity: computed property value - remaining loan balance
+                    const equity =
+                      amortizationRow !== undefined
+                        ? computedPropertyValue - amortizationRow.balance
+                        : 0;
+
                     return (
-                      <tr key={row.year} className="hover:bg-gray-50">
-                        <td className="px-4 py-2 border border-gray-200 text-center">{`Year ${row.year}`}</td>
+                      <tr key={`eq-${eqRow.year+1}`} className="hover:bg-gray-50">
+                        <td className="px-4 py-2 border border-gray-200 text-center">{`Year ${eqRow.year+1}`}</td>
                         <td className="px-4 py-2 border border-gray-200 text-right">
-                          {formatCurrency(row.propertyValue)}
+                          {formatCurrency(computedPropertyValue)}
                         </td>
                         <td className="px-4 py-2 border border-gray-200 text-right">
-                          {formatCurrency(totalLoan)}
+                          {amortizationRow ? formatCurrency(amortizationRow.balance) : '-'}
                         </td>
                         <td className="px-4 py-2 border border-gray-200 text-right">
-                          {formatCurrency(row.totalEquity)}
+                          {amortizationRow ? formatCurrency(equity) : '-'}
                         </td>
                       </tr>
                     );
                   })}
                 </tbody>
               </table>
+              
+
             </div>
 
           </div>
